@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
   },
   deleteButton: {
     flex: 1,

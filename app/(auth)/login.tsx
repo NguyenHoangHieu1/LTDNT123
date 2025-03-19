@@ -26,15 +26,17 @@ const LoginScreen: React.FC = () => {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
+    try {
+      const userData = await signIn(email, password);
+      if (userData.token) {
+        router.replace('/(drawer)/productList');
+      }
 
-    const userData = await signIn(email, password);
-    console.log(userData);
-    if (userData.token) {
-      router.replace('/(drawer)/productList');
-    }
-
-    if (error) {
-      Alert.alert('Error', error);
+      if (error) {
+        Alert.alert('Error', error);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Sai thông tin hoặc lỗi hệ thống');
     }
   };
 
@@ -97,15 +99,6 @@ const LoginScreen: React.FC = () => {
           <View style={styles.divider} />
           <Text style={styles.dividerText}>OR</Text>
           <View style={styles.divider} />
-        </View>
-
-        <View style={styles.socialContainer}>
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialButtonText}>Google</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialButtonText}>Facebook</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.registerContainer}>
