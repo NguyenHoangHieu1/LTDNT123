@@ -1,4 +1,6 @@
-import React from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,9 +11,116 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 
+import { useProductStore } from '~/store/productStore';
+import { useAuthStore } from '~/store/store';
+
 const AddProductScreen: React.FC = () => {
+  const { user } = useAuthStore();
+  const { createProduct, uploadImage, loading } = useProductStore();
+  const router = useRouter();
+
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [discount, setDiscount] = useState('');
+  const [category, setCategory] = useState('');
+  const [sku, setSku] = useState('');
+  const [inventory, setInventory] = useState('');
+  const [description, setDescription] = useState('');
+  const [features, setFeatures] = useState<string[]>(['']);
+  const [images, setImages] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need camera roll permission to upload images');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedImage = result.assets[0];
+      setImages([...images, selectedImage.uri]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = [...images];
+    newImages.splice(index, 1);
+    setImages(newImages);
+  };
+
+  const updateFeature = (text: string, index: number) => {
+    const newFeatures = [...features];
+    newFeatures[index] = text;
+    setFeatures(newFeatures);
+  };
+
+  const addFeature = () => {
+    setFeatures([...features, '']);
+  };
+
+  const removeFeature = (index: number) => {
+    const newFeatures = [...features];
+    newFeatures.splice(index, 1);
+    setFeatures(newFeatures);
+  };
+
+  const handleSave = async () => {
+    // Validate required fields
+    if (!name || !price || !category) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setUploadingImages(true);
+
+      // Upload images to server
+      const imageUrls = [];
+      for (const imageUri of images) {
+        const url = await uploadImage(imageUri);
+        if (url) {
+          imageUrls.push(url);
+        }
+      }
+
+      setUploadingImages(false);
+
+      // Create product in MongoDB
+      const productId = await createProduct({
+        name,
+        price: parseFloat(price),
+        description,
+        category,
+        sku,
+        inventory: inventory ? parseInt(inventory) : 0,
+        features: features.filter((f) => f.trim() !== ''),
+        images: imageUrls,
+      });
+
+      if (productId) {
+        Alert.alert('Success', 'Product created successfully!', [
+          { text: 'OK', onPress: () => router.back() },
+        ]);
+      }
+    } catch (error) {
+      setUploadingImages(false);
+      Alert.alert('Error', 'Failed to create product');
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -25,14 +134,21 @@ const AddProductScreen: React.FC = () => {
         <View style={styles.imageUploadSection}>
           <Text style={styles.sectionTitle}>Product Images</Text>
           <View style={styles.imageRow}>
-            <TouchableOpacity style={styles.addImageButton}>
+            <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
               <Text style={styles.addImageButtonText}>+</Text>
               <Text style={styles.addImageLabel}>Add Image</Text>
             </TouchableOpacity>
-            {/* Placeholder for additional images */}
-            <View style={styles.imagePlaceholder} />
-            <View style={styles.imagePlaceholder} />
-            <View style={styles.imagePlaceholder} />
+
+            {images.map((uri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri }} style={styles.productImage} />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={() => removeImage(index)}>
+                  <Text style={styles.removeImageButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -42,31 +158,55 @@ const AddProductScreen: React.FC = () => {
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Product Name*</Text>
-            <TextInput style={styles.input} placeholder="Enter product name" />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter product name"
+              value={name}
+              onChangeText={setName}
+            />
           </View>
 
           <View style={styles.rowInputs}>
             <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
               <Text style={styles.inputLabel}>Price*</Text>
-              <TextInput style={styles.input} placeholder="0.00" keyboardType="decimal-pad" />
+              <TextInput
+                style={styles.input}
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+                value={price}
+                onChangeText={setPrice}
+              />
             </View>
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Category*</Text>
-            <TouchableOpacity style={styles.selectInput}>
-              <Text style={styles.selectPlaceholder}>Select category</Text>
-            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter category"
+              value={category}
+              onChangeText={setCategory}
+            />
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.cancelButton}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => router.back()}
+            disabled={loading || uploadingImages}>
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Save Product</Text>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSave}
+            disabled={loading || uploadingImages}>
+            {loading || uploadingImages ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save Product</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -75,6 +215,7 @@ const AddProductScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  // Styles remain the same
   container: {
     flex: 1,
     backgroundColor: '#f8f8f8',
@@ -103,6 +244,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
+  imageContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 10,
+    marginBottom: 10,
+    position: 'relative',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e74c3c',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeImageButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   addImageButton: {
     width: 80,
     height: 80,
@@ -124,14 +294,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
-  },
-  imagePlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: '#eee',
-    marginRight: 10,
-    marginBottom: 10,
   },
   formSection: {
     backgroundColor: '#fff',
@@ -166,17 +328,6 @@ const styles = StyleSheet.create({
   },
   rowInputs: {
     flexDirection: 'row',
-  },
-  selectInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#f9f9f9',
-  },
-  selectPlaceholder: {
-    color: '#999',
-    fontSize: 16,
   },
   featuresList: {
     marginBottom: 8,

@@ -1,3 +1,4 @@
+import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   View,
@@ -11,7 +12,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+
 import { useAuthStore } from '~/store/store';
 
 const RegisterScreen: React.FC = () => {
@@ -20,7 +21,7 @@ const RegisterScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const { signUp, loading, error } = useAuthStore();
+  const { signUp, loading, error } = useAuthStore((state) => state);
   const router = useRouter();
 
   const handleRegister = async () => {
@@ -39,17 +40,15 @@ const RegisterScreen: React.FC = () => {
       Alert.alert('Error', 'Password must be at least 8 characters');
       return;
     }
-
-    await signUp(email, password);
+    console.log(fullName, email, password);
+    await signUp(fullName, email, password);
 
     if (error) {
       Alert.alert('Error', error);
     } else {
-      Alert.alert(
-        'Success',
-        'Account created successfully! Please check your email for verification.',
-        [{ text: 'OK', onPress: () => router.replace('/login') }]
-      );
+      Alert.alert('Success', 'Account created successfully!', [
+        { text: 'OK', onPress: () => router.replace('/login') },
+      ]);
     }
   };
 
@@ -136,6 +135,7 @@ const RegisterScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  // Styles remain the same
   container: {
     flex: 1,
     backgroundColor: '#fff',

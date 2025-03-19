@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -12,12 +12,15 @@ import {
   Alert,
 } from 'react-native';
 
-import { useProductStore } from '~/store/productStore';
+import { useProductStore } from '../../../store/productStore';
+
+import { Container } from '~/components/Container';
 
 const { width } = Dimensions.get('window');
 
 const ProductDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
+  console.log('FUCKKK');
   const { currentProduct, fetchProductById, loading, deleteProduct } = useProductStore();
   const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -27,10 +30,6 @@ const ProductDetailScreen: React.FC = () => {
       fetchProductById(id as string);
     }
   }, [id]);
-
-  const handleEdit = () => {
-    router.push('/(drawer)/(tabs)/productEdit');
-  };
 
   const handleDelete = () => {
     Alert.alert('Confirm Delete', 'Are you sure you want to delete this product?', [
@@ -46,10 +45,6 @@ const ProductDetailScreen: React.FC = () => {
     ]);
   };
 
-  const handleViewImages = () => {
-    router.push('/(drawer)/(tabs)/ImageViewing');
-  };
-
   if (loading || !currentProduct) {
     return (
       <View style={styles.loadingContainer}>
@@ -59,10 +54,12 @@ const ProductDetailScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Image Gallery */}
-        <TouchableOpacity onPress={handleViewImages}>
+    <>
+      <Stack.Screen options={{ title: currentProduct.name }} />
+      <Container>
+        <View style={styles.container}>
+          {/* Image Gallery */}
+          <Link href={{ pathname: '/(products)/view/[id]', params: { id } }} />
           <ScrollView
             horizontal
             pagingEnabled
@@ -87,73 +84,55 @@ const ProductDetailScreen: React.FC = () => {
               </View>
             )}
           </ScrollView>
-        </TouchableOpacity>
 
-        {/* Image Indicators */}
-        {currentProduct.images && currentProduct.images.length > 1 && (
-          <View style={styles.indicatorContainer}>
-            {currentProduct.images.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.indicator,
-                  index === selectedImageIndex ? styles.activeIndicator : null,
-                ]}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Product Info */}
-        <View style={styles.infoContainer}>
-          <Text style={styles.productName}>{currentProduct.name}</Text>
-          <Text style={styles.productPrice}>${currentProduct.price.toFixed(2)}</Text>
-
-          <View style={styles.inventoryContainer}>
-            <Text style={styles.inventoryText}>
-              {currentProduct.inventory > 0
-                ? `${currentProduct.inventory} in stock`
-                : 'Out of stock'}
-            </Text>
-          </View>
-
-          {/* Description */}
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{currentProduct.description}</Text>
-
-          {/* Features */}
-          {currentProduct.features && currentProduct.features.length > 0 && (
-            <>
-              <Text style={styles.sectionTitle}>Features</Text>
-              <View style={styles.featuresList}>
-                {currentProduct.features.map((feature, index) => (
-                  <View key={index} style={styles.featureItem}>
-                    <View style={styles.bulletPoint} />
-                    <Text style={styles.featureText}>{feature}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
+          {/* Image Indicators */}
+          {currentProduct.images && currentProduct.images.length > 1 && (
+            <View style={styles.indicatorContainer}>
+              {currentProduct.images.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.indicator,
+                    index === selectedImageIndex ? styles.activeIndicator : null,
+                  ]}
+                />
+              ))}
+            </View>
           )}
-        </View>
-      </ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-          <Text style={styles.editButtonText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.deleteButtonText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+          {/* Product Info */}
+          <View style={styles.infoContainer}>
+            <Text style={styles.productName}>{currentProduct.name}</Text>
+            <Text style={styles.productPrice}>${currentProduct.price.toFixed(2)}</Text>
+
+            <View style={styles.inventoryContainer}>
+              <Text style={styles.inventoryText}>
+                {currentProduct.inventory > 0
+                  ? `${currentProduct.inventory} in stock`
+                  : 'Out of stock'}
+              </Text>
+            </View>
+          </View>
+          {/* Bottom Action Bar */}
+          <View style={styles.actionBar}>
+            <Link
+              style={styles.editButton}
+              href={{ pathname: '/edit/[id]', params: { id: id as any } }}>
+              <Text style={styles.editButtonText}>Edit</Text>
+            </Link>
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Container>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1,
     backgroundColor: '#fff',
   },
   loadingContainer: {

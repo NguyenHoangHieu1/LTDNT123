@@ -37,26 +37,27 @@ const DrawerLayout = () => {
         }}
       />
       <Drawer.Screen
-        name="login"
+        name="productList"
         options={{
-          headerTitle: 'Login',
-          drawerLabel: 'Login',
+          headerTitle: 'Product list',
+          drawerLabel: 'Product list',
           drawerIcon: ({ size, color }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
       <Drawer.Screen
-        name="register"
+        name="account"
         options={{
-          headerTitle: 'Register',
-          drawerLabel: 'Register',
+          headerTitle: 'Profile',
+          drawerLabel: 'Profile',
           drawerIcon: ({ size, color }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
-      <Drawer.Screen
+
+      {/* <Drawer.Screen
         name="(tabs)"
         options={{
           headerTitle: 'Tabs',
@@ -70,7 +71,7 @@ const DrawerLayout = () => {
             </Link>
           ),
         }}
-      />
+      />*/}
     </Drawer>
   );
 };

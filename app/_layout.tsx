@@ -31,6 +31,10 @@ export default function RootLayout() {
         }}>
         <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ title: 'Modal', presentation: 'modal' }} />
+        <Stack.Screen
+          name="(auth)"
+          options={{ title: 'Authentication', presentation: 'modal', headerShown: false }}
+        />
       </Stack>
     </GestureHandlerRootView>
   );

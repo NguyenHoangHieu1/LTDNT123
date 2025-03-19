@@ -1,3 +1,4 @@
+import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import {
   View,
@@ -12,14 +13,13 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { Link, useRouter } from 'expo-router';
+
 import { useAuthStore } from '~/store/store';
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { signIn, loading, error } = useAuthStore();
-  const router = useRouter();
+  const { signIn, loading, error } = useAuthStore((state) => state);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -27,7 +27,11 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
-    await signIn(email, password);
+    const userData = await signIn(email, password);
+    console.log(userData);
+    if (userData.token) {
+      router.replace('/(drawer)/productList');
+    }
 
     if (error) {
       Alert.alert('Error', error);
@@ -71,9 +75,14 @@ const LoginScreen: React.FC = () => {
             value={password}
             onChangeText={setPassword}
           />
-          <TouchableOpacity>
-            <Text style={styles.forgotPassword}>Forgot Password?</Text>
-          </TouchableOpacity>
+          <Link href="/(auth)/forgotPassword" asChild>
+            <TouchableOpacity>
+              <Text style={styles.forgotPassword}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </Link>
+          {/* <TouchableOpacity> */}
+          {/*   <Text style={styles.forgotPassword}>Forgot Password?</Text> */}
+          {/* </TouchableOpacity> */}
         </View>
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
@@ -113,6 +122,7 @@ const LoginScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  // Styles remain the same
   container: {
     flex: 1,
     backgroundColor: '#fff',

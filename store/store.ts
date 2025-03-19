@@ -1,17 +1,28 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
-import { supabase } from '../libs/supabase';
-import { Session, User } from '@supabase/supabase-js';
+
+import { authAPI } from '../libs/api';
+
+interface User {
+  _id: string;
+  fullName: string;
+  email: string;
+  token: string;
+}
 
 interface AuthState {
   user: User | null;
-  session: Session | null;
   loading: boolean;
   error: string | null;
 
   // Auth actions
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (fullName: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+
+  // Profile actions
+  updateProfile: (fullName: string, email: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 
   // Session management
   refreshSession: () => Promise<void>;
@@ -19,25 +30,21 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  session: null,
   loading: false,
   error: null,
 
   signIn: async (email: string, password: string) => {
     try {
       set({ loading: true, error: null });
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const userData = await authAPI.login(email, password);
 
-      if (error) throw error;
-
+      // Save token to AsyncStorage
+      await AsyncStorage.setItem('userToken', userData.token);
       set({
-        user: data.user,
-        session: data.session,
+        user: userData,
         loading: false,
       });
+      return userData;
     } catch (error: any) {
       set({
         error: error.message || 'Failed to sign in',
@@ -46,19 +53,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signUp: async (email: string, password: string) => {
+  signUp: async (fullName: string, email: string, password: string) => {
     try {
       set({ loading: true, error: null });
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const userData = await authAPI.register(fullName, email, password);
 
-      if (error) throw error;
+      // Save token to AsyncStorage
+      await AsyncStorage.setItem('userToken', userData.token);
 
       set({
-        user: data.user,
-        session: data.session,
+        user: userData,
         loading: false,
       });
     } catch (error: any) {
@@ -72,13 +76,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     try {
       set({ loading: true, error: null });
-      const { error } = await supabase.auth.signOut();
 
-      if (error) throw error;
+      // Remove token from AsyncStorage
+      await AsyncStorage.removeItem('userToken');
 
       set({
         user: null,
-        session: null,
         loading: false,
       });
     } catch (error: any) {
@@ -92,20 +95,75 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   refreshSession: async () => {
     try {
       set({ loading: true });
-      const { data, error } = await supabase.auth.getSession();
 
-      if (error) throw error;
+      // Get token from AsyncStorage
+      const token = await AsyncStorage.getItem('userToken');
 
-      set({
-        user: data.session?.user || null,
-        session: data.session,
-        loading: false,
-      });
+      if (!token) {
+        set({ user: null, loading: false });
+        return;
+      }
+
+      try {
+        // Verify token by getting user profile
+        const profile = await authAPI.getProfile();
+
+        set({
+          user: {
+            _id: profile._id,
+            fullName: profile.fullName,
+            email: profile.email,
+            token,
+          },
+          loading: false,
+        });
+      } catch (error) {
+        // Token is invalid, remove it
+        await AsyncStorage.removeItem('userToken');
+        set({ user: null, loading: false });
+      }
     } catch (error: any) {
       set({
         error: error.message || 'Failed to refresh session',
         loading: false,
       });
+    }
+  },
+
+  updateProfile: async (fullName: string, email: string) => {
+    try {
+      set({ loading: true, error: null });
+      const userData = await authAPI.updateProfile(fullName, email);
+
+      // Update token in AsyncStorage if it changed
+      await AsyncStorage.setItem('userToken', userData.token);
+
+      set({
+        user: userData,
+        loading: false,
+      });
+
+      return userData;
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to update profile',
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string) => {
+    try {
+      set({ loading: true, error: null });
+      await authAPI.changePassword(currentPassword, newPassword);
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to change password',
+        loading: false,
+      });
+      throw error;
     }
   },
 }));
