@@ -17,16 +17,16 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="index"
+        name="productList"
         options={{
-          title: 'Tab One',
+          title: 'Product list',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="productAdd"
         options={{
-          title: 'Tab Two',
+          title: 'Add Product',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />

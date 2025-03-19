@@ -37,6 +37,26 @@ const DrawerLayout = () => {
         }}
       />
       <Drawer.Screen
+        name="login"
+        options={{
+          headerTitle: 'Login',
+          drawerLabel: 'Login',
+          drawerIcon: ({ size, color }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="register"
+        options={{
+          headerTitle: 'Register',
+          drawerLabel: 'Register',
+          drawerIcon: ({ size, color }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="(tabs)"
         options={{
           headerTitle: 'Tabs',
