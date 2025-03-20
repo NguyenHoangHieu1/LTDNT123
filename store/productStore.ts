@@ -3,16 +3,11 @@ import { create } from 'zustand';
 import { productsAPI } from '../libs/api';
 
 export interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  description: string;
-  images: string[];
-  category: string;
-  sku?: string;
-  inventory: number;
-  features: string[];
-  user: string;
+  idsanpham: string;
+  tensanpham: string;
+  gia: number;
+  hinhanh: string;
+  loaisp: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -26,7 +21,7 @@ interface ProductState {
   // CRUD operations
   fetchProducts: () => Promise<void>;
   fetchProductById: (id: string) => Promise<void>;
-  createProduct: (product: Omit<Product, '_id' | 'user'>) => Promise<string | null>;
+  createProduct: (product: Omit<Product, 'idsanpham' | 'user'>) => Promise<string | null>;
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
 
@@ -79,7 +74,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         loading: false,
       }));
 
-      return data._id;
+      return data.idsanpham;
     } catch (error: any) {
       set({
         error: error.message || 'Failed to create product',
@@ -96,9 +91,9 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
       // Update products list with the updated product
       set((state) => ({
-        products: state.products.map((p) => (p._id === id ? { ...p, ...data } : p)),
+        products: state.products.map((p) => (p.idsanpham === id ? { ...p, ...data } : p)),
         currentProduct:
-          state.currentProduct?._id === id
+          state.currentProduct?.idsanpham === id
             ? { ...state.currentProduct, ...data }
             : state.currentProduct,
         loading: false,
@@ -118,7 +113,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
       // Remove product from the list
       set((state) => ({
-        products: state.products.filter((p) => p._id !== id),
+        products: state.products.filter((p) => p.idsanpham !== id),
         loading: false,
       }));
     } catch (error: any) {

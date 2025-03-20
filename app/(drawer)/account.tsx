@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { authAPI } from '~/libs/api';
 
 import { useAuthStore } from '~/store/store';
 
@@ -289,11 +290,12 @@ const AccountScreen: React.FC = () => {
                   {
                     text: 'Delete Account',
                     style: 'destructive',
-                    onPress: () =>
-                      Alert.alert(
-                        'Feature Coming Soon',
-                        'Account deletion will be available in a future update.'
-                      ),
+                    onPress: () => {
+                      authAPI.deleteAccount(user._id);
+                      Alert.alert('Delete account successfully', 'You already done it :)');
+                      signOut();
+                      router.replace('/(auth)/login');
+                    },
                   },
                 ]
               );

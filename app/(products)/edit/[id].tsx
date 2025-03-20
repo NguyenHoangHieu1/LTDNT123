@@ -24,16 +24,10 @@ export default function EditProductScreen() {
     useProductStore();
   const router = useRouter();
 
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [discount, setDiscount] = useState('');
-  const [category, setCategory] = useState('');
-  const [sku, setSku] = useState('');
-  const [inventory, setInventory] = useState('');
-  const [description, setDescription] = useState('');
-  const [features, setFeatures] = useState<string[]>(['']);
-  const [images, setImages] = useState<string[]>([]);
-  const [newImages, setNewImages] = useState<string[]>([]);
+  const [tensanpham, settensanpham] = useState('');
+  const [gia, setgia] = useState('');
+  const [loaisp, setloaisp] = useState('');
+  const [hinhanh, sethinhanh] = useState<string>('');
   const [uploadingImages, setUploadingImages] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,13 +43,10 @@ export default function EditProductScreen() {
 
   useEffect(() => {
     if (currentProduct) {
-      setName(currentProduct.name);
-      setPrice(currentProduct.price.toString());
-      setCategory(currentProduct.category || '');
-      setDescription(currentProduct.description || '');
-      setInventory(currentProduct.inventory?.toString() || '0');
-      setFeatures(currentProduct.features?.length ? currentProduct.features : ['']);
-      setImages(currentProduct.images || []);
+      settensanpham(currentProduct.tensanpham);
+      setgia(currentProduct.gia.toString());
+      setloaisp(currentProduct.loaisp || '');
+      sethinhanh(currentProduct.hinhanh || '');
       setIsLoading(false);
     }
   }, [currentProduct]);
@@ -74,44 +65,19 @@ export default function EditProductScreen() {
       aspect: [1, 1],
       quality: 0.8,
     });
-
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const selectedImage = result.assets[0];
-      setNewImages([...newImages, selectedImage.uri]);
+      sethinhanh(selectedImage.uri);
     }
   };
 
-  const removeImage = (index: number, isNewImage: boolean) => {
-    if (isNewImage) {
-      const updatedNewImages = [...newImages];
-      updatedNewImages.splice(index, 1);
-      setNewImages(updatedNewImages);
-    } else {
-      const updatedImages = [...images];
-      updatedImages.splice(index, 1);
-      setImages(updatedImages);
-    }
-  };
-
-  const updateFeature = (text: string, index: number) => {
-    const newFeatures = [...features];
-    newFeatures[index] = text;
-    setFeatures(newFeatures);
-  };
-
-  const addFeature = () => {
-    setFeatures([...features, '']);
-  };
-
-  const removeFeature = (index: number) => {
-    const newFeatures = [...features];
-    newFeatures.splice(index, 1);
-    setFeatures(newFeatures);
+  const removeImage = () => {
+    sethinhanh('');
   };
 
   const handleSave = async () => {
     // Validate required fields
-    if (!name || !price || !category) {
+    if (!tensanpham || !gia || !loaisp) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -120,26 +86,21 @@ export default function EditProductScreen() {
       setUploadingImages(true);
 
       // Upload new images to Supabase storage
-      const imageUrls = [...images];
-      for (const imageUri of newImages) {
-        const fileName = imageUri.split('/').pop() || 'image.jpg';
-        const url = await uploadImage(imageUri);
-        if (url) {
-          imageUrls.push(url);
-        }
+      let imageUrl = '';
+      const fileName = hinhanh.split('/').pop() || 'image.jpg';
+      const url = await uploadImage(hinhanh);
+      if (url) {
+        imageUrl = url;
       }
 
       setUploadingImages(false);
 
       // Update product in Supabase
       await updateProduct(id as string, {
-        name,
-        price: parseFloat(price),
-        description,
-        category,
-        inventory: inventory ? parseInt(inventory) : 0,
-        features: features.filter((f) => f.trim() !== ''),
-        images: imageUrls,
+        tensanpham,
+        gia: parseFloat(gia),
+        loaisp,
+        hinhanh: imageUrl,
       });
 
       Alert.alert('Success', 'Product updated successfully!', [
@@ -175,32 +136,25 @@ export default function EditProductScreen() {
             <View style={styles.imageUploadSection}>
               <Text style={styles.sectionTitle}>Product Images</Text>
               <View style={styles.imageRow}>
-                {images.map((uri, index) => (
-                  <View key={`existing-${index}`} style={styles.imageContainer}>
-                    <Image source={{ uri }} style={styles.productImage} />
+                <View style={styles.imageContainer}>
+                  <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+                    {hinhanh ? (
+                      <Image source={{ uri: hinhanh }} style={styles.productImage} />
+                    ) : (
+                      <>
+                        <Text style={styles.addImageButtonText}>+</Text>
+                        <Text style={styles.addImageLabel}>Add Image</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  {hinhanh && (
                     <TouchableOpacity
                       style={styles.removeImageButton}
-                      onPress={() => removeImage(index, false)}>
+                      onPress={() => removeImage()}>
                       <Text style={styles.removeImageButtonText}>×</Text>
                     </TouchableOpacity>
-                  </View>
-                ))}
-
-                {newImages.map((uri, index) => (
-                  <View key={`new-${index}`} style={styles.imageContainer}>
-                    <Image source={{ uri }} style={styles.productImage} />
-                    <TouchableOpacity
-                      style={styles.removeImageButton}
-                      onPress={() => removeImage(index, true)}>
-                      <Text style={styles.removeImageButtonText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-
-                <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
-                  <Text style={styles.addImageButtonText}>+</Text>
-                  <Text style={styles.addImageLabel}>Add Image</Text>
-                </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
 
@@ -213,8 +167,8 @@ export default function EditProductScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter product name"
-                  value={name}
-                  onChangeText={setName}
+                  value={tensanpham}
+                  onChangeText={settensanpham}
                 />
               </View>
 
@@ -225,8 +179,8 @@ export default function EditProductScreen() {
                     style={styles.input}
                     placeholder="0.00"
                     keyboardType="decimal-pad"
-                    value={price}
-                    onChangeText={setPrice}
+                    value={gia}
+                    onChangeText={setgia}
                   />
                 </View>
               </View>
@@ -236,8 +190,8 @@ export default function EditProductScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter category"
-                  value={category}
-                  onChangeText={setCategory}
+                  value={loaisp}
+                  onChangeText={setloaisp}
                 />
               </View>
             </View>

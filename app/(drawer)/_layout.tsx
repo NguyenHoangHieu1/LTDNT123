@@ -42,7 +42,7 @@ const DrawerLayout = () => {
           headerTitle: 'Product list',
           drawerLabel: 'Product list',
           drawerIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="server-outline" size={size} color={color} />
           ),
         }}
       />
@@ -52,7 +52,7 @@ const DrawerLayout = () => {
           headerTitle: 'Profile',
           drawerLabel: 'Profile',
           drawerIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />

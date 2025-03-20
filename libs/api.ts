@@ -5,7 +5,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 // For Android emulator, use 10.0.2.2 to access localhost
 // For iOS simulator, use localhost
 // For physical devices, use your computer's IP address on the same network
-const API_URL = 'http://192.168.1.5:5000/api'; // Android emulator example
+const API_URL = 'http://192.168.1.3:5000/api'; // Android emulator example
 
 // Create axios instance
 const api = axios.create({
@@ -106,6 +106,11 @@ export const authAPI = {
 
   resetPassword: async (token: string, password: string) => {
     const response = await api.post('/password-reset/reset', { token, password });
+    return response.data;
+  },
+
+  deleteAccount: async (userId: string) => {
+    const response = await api.delete(`/auth/${userId}`);
     return response.data;
   },
 };

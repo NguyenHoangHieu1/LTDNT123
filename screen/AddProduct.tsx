@@ -23,15 +23,10 @@ const AddProductScreen: React.FC = () => {
   const { createProduct, uploadImage, loading } = useProductStore();
   const router = useRouter();
 
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [discount, setDiscount] = useState('');
-  const [category, setCategory] = useState('');
-  const [sku, setSku] = useState('');
-  const [inventory, setInventory] = useState('');
-  const [description, setDescription] = useState('');
-  const [features, setFeatures] = useState<string[]>(['']);
-  const [images, setImages] = useState<string[]>([]);
+  const [tenSanPham, setTenSanPham] = useState('');
+  const [gia, setGia] = useState('');
+  const [loaiSanPham, setLoaiSanPham] = useState('');
+  const [hinhanh, setHinhAnh] = useState<string>();
   const [uploadingImages, setUploadingImages] = useState(false);
 
   const pickImage = async () => {
@@ -50,36 +45,19 @@ const AddProductScreen: React.FC = () => {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
+      console.log(result.assets);
       const selectedImage = result.assets[0];
-      setImages([...images, selectedImage.uri]);
+      setHinhAnh(selectedImage.uri);
     }
   };
 
-  const removeImage = (index: number) => {
-    const newImages = [...images];
-    newImages.splice(index, 1);
-    setImages(newImages);
-  };
-
-  const updateFeature = (text: string, index: number) => {
-    const newFeatures = [...features];
-    newFeatures[index] = text;
-    setFeatures(newFeatures);
-  };
-
-  const addFeature = () => {
-    setFeatures([...features, '']);
-  };
-
-  const removeFeature = (index: number) => {
-    const newFeatures = [...features];
-    newFeatures.splice(index, 1);
-    setFeatures(newFeatures);
+  const removeImage = () => {
+    setHinhAnh('');
   };
 
   const handleSave = async () => {
     // Validate required fields
-    if (!name || !price || !category) {
+    if (!tenSanPham || !gia || !loaiSanPham) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -88,11 +66,11 @@ const AddProductScreen: React.FC = () => {
       setUploadingImages(true);
 
       // Upload images to server
-      const imageUrls = [];
-      for (const imageUri of images) {
-        const url = await uploadImage(imageUri);
+      let imageUrl = '';
+      if (hinhanh) {
+        const url = await uploadImage(hinhanh);
         if (url) {
-          imageUrls.push(url);
+          imageUrl = url;
         }
       }
 
@@ -100,14 +78,10 @@ const AddProductScreen: React.FC = () => {
 
       // Create product in MongoDB
       const productId = await createProduct({
-        name,
-        price: parseFloat(price),
-        description,
-        category,
-        sku,
-        inventory: inventory ? parseInt(inventory) : 0,
-        features: features.filter((f) => f.trim() !== ''),
-        images: imageUrls,
+        tensanpham: tenSanPham,
+        gia: parseFloat(gia),
+        loaisp: loaiSanPham,
+        hinhanh: imageUrl,
       });
 
       if (productId) {
@@ -134,21 +108,23 @@ const AddProductScreen: React.FC = () => {
         <View style={styles.imageUploadSection}>
           <Text style={styles.sectionTitle}>Product Images</Text>
           <View style={styles.imageRow}>
-            <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
-              <Text style={styles.addImageButtonText}>+</Text>
-              <Text style={styles.addImageLabel}>Add Image</Text>
-            </TouchableOpacity>
-
-            {images.map((uri, index) => (
-              <View key={index} style={styles.imageContainer}>
-                <Image source={{ uri }} style={styles.productImage} />
-                <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={() => removeImage(index)}>
+            <View style={styles.imageContainer}>
+              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+                {hinhanh ? (
+                  <Image source={{ uri: hinhanh }} style={styles.productImage} />
+                ) : (
+                  <>
+                    <Text style={styles.addImageButtonText}>+</Text>
+                    <Text style={styles.addImageLabel}>Add Image</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              {hinhanh && (
+                <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage()}>
                   <Text style={styles.removeImageButtonText}>×</Text>
                 </TouchableOpacity>
-              </View>
-            ))}
+              )}
+            </View>
           </View>
         </View>
 
@@ -161,8 +137,8 @@ const AddProductScreen: React.FC = () => {
             <TextInput
               style={styles.input}
               placeholder="Enter product name"
-              value={name}
-              onChangeText={setName}
+              value={tenSanPham}
+              onChangeText={setTenSanPham}
             />
           </View>
 
@@ -173,8 +149,8 @@ const AddProductScreen: React.FC = () => {
                 style={styles.input}
                 placeholder="0.00"
                 keyboardType="decimal-pad"
-                value={price}
-                onChangeText={setPrice}
+                value={gia}
+                onChangeText={setGia}
               />
             </View>
           </View>
@@ -184,8 +160,8 @@ const AddProductScreen: React.FC = () => {
             <TextInput
               style={styles.input}
               placeholder="Enter category"
-              value={category}
-              onChangeText={setCategory}
+              value={loaiSanPham}
+              onChangeText={setLoaiSanPham}
             />
           </View>
         </View>

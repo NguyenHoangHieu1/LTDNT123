@@ -55,11 +55,13 @@ const ProductDetailScreen: React.FC = () => {
 
   return (
     <>
-      <Stack.Screen options={{ title: currentProduct.name }} />
+      <Stack.Screen options={{ title: currentProduct.tensanpham }} />
       <Container>
         <View style={styles.container}>
           {/* Image Gallery */}
-          <Link href={{ pathname: '/(products)/view/[id]', params: { id } }} />
+          <Link
+            href={{ pathname: '/(products)/view/[id]', params: { id: currentProduct.tensanpham } }}
+          />
           <ScrollView
             horizontal
             pagingEnabled
@@ -69,12 +71,10 @@ const ProductDetailScreen: React.FC = () => {
               const newIndex = Math.round(e.nativeEvent.contentOffset.x / width);
               setSelectedImageIndex(newIndex);
             }}>
-            {currentProduct.images && currentProduct.images.length > 0 ? (
-              currentProduct.images.map((image, index) => (
-                <View key={index} style={styles.imageContainer}>
-                  <Image source={{ uri: image }} style={styles.productImage} />
-                </View>
-              ))
+            {currentProduct.hinhanh ? (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: currentProduct.hinhanh }} style={styles.productImage} />
+              </View>
             ) : (
               <View style={styles.imageContainer}>
                 <Image
@@ -85,7 +85,7 @@ const ProductDetailScreen: React.FC = () => {
             )}
           </ScrollView>
 
-          {/* Image Indicators */}
+          {/* Image Indicators
           {currentProduct.images && currentProduct.images.length > 1 && (
             <View style={styles.indicatorContainer}>
               {currentProduct.images.map((_, index) => (
@@ -98,20 +98,12 @@ const ProductDetailScreen: React.FC = () => {
                 />
               ))}
             </View>
-          )}
+          )} */}
 
           {/* Product Info */}
           <View style={styles.infoContainer}>
-            <Text style={styles.productName}>{currentProduct.name}</Text>
-            <Text style={styles.productPrice}>${currentProduct.price.toFixed(2)}</Text>
-
-            <View style={styles.inventoryContainer}>
-              <Text style={styles.inventoryText}>
-                {currentProduct.inventory > 0
-                  ? `${currentProduct.inventory} in stock`
-                  : 'Out of stock'}
-              </Text>
-            </View>
+            <Text style={styles.productName}>{currentProduct.tensanpham}</Text>
+            <Text style={styles.productPrice}>${currentProduct.gia.toFixed(2)}</Text>
           </View>
           {/* Bottom Action Bar */}
           <View style={styles.actionBar}>

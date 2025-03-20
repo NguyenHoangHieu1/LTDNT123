@@ -58,30 +58,26 @@ const ProductListScreen: React.FC = () => {
     router.replace('/login');
   };
 
-  const renderProductItem = ({ item }: { item: any }) => (
-    <Link href={{ pathname: `/(products)/detail/[id]`, params: { id: item._id } }}>
-      <View style={styles.productCard}>
-        <Image
-          source={{
-            uri:
-              item.images && item.images.length > 0
-                ? item.images[0]
-                : 'https://via.placeholder.com/100',
-          }}
-          style={styles.productImage}
-        />
-        <View style={styles.productInfo}>
-          <Text style={styles.productName}>{item.name}</Text>
-          <Text style={styles.productCategory}>{item.category}</Text>
-          <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
-          <View style={styles.productMeta}>
-            <Text style={styles.productSku}>{item.sku ? `SKU: ${item.sku}` : 'No SKU'}</Text>
-            <Text style={styles.productInventory}>Stock: {item.inventory || 0}</Text>
+  const renderProductItem = ({ item }: { item: any }) => {
+    console.log('item:', item);
+    return (
+      <Link href={{ pathname: `/(products)/detail/[id]`, params: { id: item.idsanpham } }}>
+        <View style={styles.productCard}>
+          <Image
+            source={{
+              uri: item.hinhanh || 'https://via.placeholder.com/100',
+            }}
+            style={styles.productImage}
+          />
+          <View style={styles.productInfo}>
+            <Text style={styles.productName}>{item.tensanpham}</Text>
+            <Text style={styles.productCategory}>{item.loaisp}</Text>
+            <Text style={styles.productPrice}>${item.gia.toFixed(2)}</Text>
           </View>
         </View>
-      </View>
-    </Link>
-  );
+      </Link>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -121,7 +117,7 @@ const ProductListScreen: React.FC = () => {
         <FlatList
           data={products}
           renderItem={renderProductItem}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item.idsanpham}
           contentContainerStyle={styles.productList}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         />
