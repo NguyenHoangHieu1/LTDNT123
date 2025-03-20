@@ -20,7 +20,6 @@ const { width } = Dimensions.get('window');
 
 const ProductDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
-  console.log('FUCKKK');
   const { currentProduct, fetchProductById, loading, deleteProduct } = useProductStore();
   const router = useRouter();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -59,9 +58,6 @@ const ProductDetailScreen: React.FC = () => {
       <Container>
         <View style={styles.container}>
           {/* Image Gallery */}
-          <Link
-            href={{ pathname: '/(products)/view/[id]', params: { id: currentProduct.tensanpham } }}
-          />
           <ScrollView
             horizontal
             pagingEnabled
@@ -104,6 +100,7 @@ const ProductDetailScreen: React.FC = () => {
           <View style={styles.infoContainer}>
             <Text style={styles.productName}>{currentProduct.tensanpham}</Text>
             <Text style={styles.productPrice}>${currentProduct.gia.toFixed(2)}</Text>
+            <Text style={styles.productCategory}>{currentProduct.loaisp}</Text>
           </View>
           {/* Bottom Action Bar */}
           <View style={styles.actionBar}>
@@ -245,6 +242,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  productCategory: {
+    fontSize: 16,
+    fontWeight: 'normal',
+    color: '#333',
+    marginBottom: 8,
   },
 });
 
